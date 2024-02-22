@@ -4,3 +4,7 @@ website performance dashboard on google search console data
 
 # Export Anconda Yaml File
 conda env export | grep -v "^prefix: " > environment.yml
+
+# Features 
+
+1. Support Reupload the Data.
