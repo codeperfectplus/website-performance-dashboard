@@ -7,22 +7,33 @@ import io
 import os
 import plotly.graph_objects as go
 import base64
+import traceback
 
 app = Dash(__name__)
 
 ROOT_DIR = os.path.dirname(os.path.dirname((os.path.abspath(__file__))))
 DATA_DIR = os.path.join(ROOT_DIR, 'data')
 
-countries_df = pd.read_csv(os.path.join(DATA_DIR, 'Countries.csv'))
-dates_df = pd.read_csv(os.path.join(DATA_DIR, 'Dates.csv'))
-devices_df = pd.read_csv(os.path.join(DATA_DIR, 'Devices.csv'))
-filter_df = pd.read_csv(os.path.join(DATA_DIR, 'Filters.csv'))
-pages_df = pd.read_csv(os.path.join(DATA_DIR, 'Pages.csv'))
-queries_df = pd.read_csv(os.path.join(DATA_DIR, 'Queries.csv'))
+# if there is zip file in the data directory unzip it and replace the existing file
+for file in os.listdir(DATA_DIR):
+    if file.endswith('.zip'):
+        os.system(f'unzip -o {os.path.join(DATA_DIR, file)} -d {DATA_DIR}')
+
+def load_csv_files(filepath):
+    if filepath.endswith('.csv') and os.path.exists(filepath):
+        return pd.read_csv(filepath)
+    return pd.DataFrame()
+
+countries_df = load_csv_files(os.path.join(DATA_DIR, 'Countries.csv'))
+dates_df = load_csv_files(os.path.join(DATA_DIR, 'Dates.csv'))
+devices_df = load_csv_files(os.path.join(DATA_DIR, 'Devices.csv'))
+filter_df = load_csv_files(os.path.join(DATA_DIR, 'Filters.csv'))
+pages_df = load_csv_files(os.path.join(DATA_DIR, 'Pages.csv'))
+queries_df = load_csv_files(os.path.join(DATA_DIR, 'Queries.csv'))    
+
 
 dates_df['Date'] = pd.to_datetime(dates_df['Date'])
 dates_df['Day'] = dates_df['Date'].dt.day_name()
-
 
 
 app.layout = html.Div([
@@ -189,6 +200,14 @@ def update_output(uploaded_filenames, uploaded_file_contents):
                 data = data.encode('utf8').split(b';base64,')[1]
                 with open(os.path.join(DATA_DIR, name), 'wb') as file:
                     file.write(base64.decodebytes(data))
+                    
+            elif name.endswith('.zip'):
+                data = data.encode('utf8').split(b';base64,')[1]
+                with open(os.path.join(DATA_DIR, name), 'wb') as file:
+                    file.write(base64.decodebytes(data))
+                # unzip the file and save it in the data directory with replacing the existing file
+                os.system(f'unzip -o {os.path.join(DATA_DIR, name)} -d {DATA_DIR}')
+                
     return [html.Div(['File uploaded successfully!'])]
 
 
